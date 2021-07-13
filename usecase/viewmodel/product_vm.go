@@ -5,7 +5,6 @@ type ProductVM struct {
 	ID           string  `json:"id"`
 	CategoryID   string  `json:"category_id"`
 	CategoryName string  `json:"category_name"`
-	Code         string  `json:"code"`
 	Name         string  `json:"name"`
 	Description  string  `json:"description"`
 	ImagePath    string  `json:"image_path"`

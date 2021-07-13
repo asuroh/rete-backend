@@ -13,12 +13,12 @@ var (
 		"def.created_at", "def.updated_at",
 	}
 
-	productSelectString = `SELECT def.id, def.category_id, c.name, def.code, def.name, def.description, def.image_path, def.price, def.qty, def.created_at, def.updated_at, def.deleted_at FROM products def left join categories c on c.id = def.category_id `
+	productSelectString = `SELECT def.id, def.category_id, c.name, def.name, def.description, def.image_path, def.price, def.qty, def.created_at, def.updated_at, def.deleted_at FROM products def left join categories c on c.id = def.category_id `
 )
 
 func (model productModel) scanRows(rows *sql.Rows) (d ProductEntity, err error) {
 	err = rows.Scan(
-		&d.ID, &d.CategoryID, &d.CategoryName, &d.Code, &d.Name, &d.Description, &d.ImagePath, &d.Price, &d.Qty, &d.CreatedAt,
+		&d.ID, &d.CategoryID, &d.CategoryName, &d.Name, &d.Description, &d.ImagePath, &d.Price, &d.Qty, &d.CreatedAt,
 		&d.UpdatedAt, &d.DeletedAt,
 	)
 
@@ -27,7 +27,7 @@ func (model productModel) scanRows(rows *sql.Rows) (d ProductEntity, err error) 
 
 func (model productModel) scanRow(row *sql.Row) (d ProductEntity, err error) {
 	err = row.Scan(
-		&d.ID, &d.CategoryID, &d.CategoryName, &d.Code, &d.Name, &d.Description, &d.ImagePath, &d.Price, &d.Qty, &d.CreatedAt,
+		&d.ID, &d.CategoryID, &d.CategoryName, &d.Name, &d.Description, &d.ImagePath, &d.Price, &d.Qty, &d.CreatedAt,
 		&d.UpdatedAt, &d.DeletedAt,
 	)
 
@@ -50,7 +50,6 @@ type ProductEntity struct {
 	ID           string         `db:"id"`
 	CategoryID   string         `db:"category_id"`
 	CategoryName string         `db:"category_name"`
-	Code         string         `db:"code"`
 	Name         string         `db:"name"`
 	Description  string         `db:"description"`
 	ImagePath    sql.NullString `db:"image_path"`

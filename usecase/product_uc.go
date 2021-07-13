@@ -20,7 +20,6 @@ func (uc ProductUC) BuildBody(data *model.ProductEntity, res *viewmodel.ProductV
 	res.Name = data.Name
 	res.CategoryID = data.CategoryID
 	res.CategoryName = data.CategoryName
-	res.Code = data.Code
 	res.Description = data.Description
 	res.Price = data.Price
 	res.Qty = data.Qty

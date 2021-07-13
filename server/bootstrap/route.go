@@ -68,6 +68,21 @@ func (boot *Bootup) RegisterRoutes() {
 					r.Get("/id/{id}", productHandler.GetByIDHandler)
 				})
 			})
+
+			categoryHandler := api.CategoryHandler{Handler: handlerType}
+			r.Route("/category", func(r chi.Router) {
+				r.Group(func(r chi.Router) {
+					r.Get("/", categoryHandler.GetAllHandler)
+				})
+			})
+
+			userCartHandler := api.UserCartHandler{Handler: handlerType}
+			r.Route("/cart", func(r chi.Router) {
+				r.Group(func(r chi.Router) {
+					r.Use(mJwt.VerifyUserTokenCredential)
+					r.Get("/", userCartHandler.GetAllHandler)
+				})
+			})
 		})
 	})
 }
