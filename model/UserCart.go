@@ -2,6 +2,8 @@ package model
 
 import (
 	"database/sql"
+	"retel-backend/usecase/viewmodel"
+	"time"
 )
 
 var (
@@ -39,6 +41,9 @@ type userCartModel struct {
 // IUserCart ...
 type IUserCart interface {
 	FindAll(userID string, offset, limit int, by, sort string) ([]UserCartEntity, int, error)
+	Store(id string, body viewmodel.UserCartVM, changedAt time.Time) error
+	Update(id string, body viewmodel.UserCartVM, changedAt time.Time) error
+	Destroy(id string, changedAt time.Time) error
 }
 
 // UserCartEntity ....
@@ -83,4 +88,31 @@ func (model userCartModel) FindAll(userID string, offset, limit int, by, sort st
 	err = model.DB.QueryRow(query, userID).Scan(&count)
 
 	return res, count, err
+}
+
+// Store ...
+func (model userCartModel) Store(id string, body viewmodel.UserCartVM, changedAt time.Time) (err error) {
+	sql := `INSERT INTO user_cart (id, user_id, product_id, qty, price, created_at, updated_at
+		) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	_, err = model.DB.Exec(sql, id, body.UserID, body.ProductID, body.Qty, body.Price, changedAt, changedAt)
+
+	return err
+}
+
+// Update ...
+func (model userCartModel) Update(id string, body viewmodel.UserCartVM, changedAt time.Time) (err error) {
+	sql := `UPDATE user_cart SET qty = ?, updated_at = ? WHERE deleted_at IS NULL
+		AND id = ?`
+	_, err = model.DB.Exec(sql, body.Qty, changedAt, id)
+
+	return err
+}
+
+// Destroy ...
+func (model userCartModel) Destroy(id string, changedAt time.Time) (err error) {
+	sql := `UPDATE user_cart SET updated_at = ?, deleted_at = ?
+		WHERE deleted_at IS NULL AND id = ?`
+	_, err = model.DB.Exec(sql, changedAt, changedAt, id)
+
+	return err
 }

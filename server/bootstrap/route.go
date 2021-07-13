@@ -81,6 +81,9 @@ func (boot *Bootup) RegisterRoutes() {
 				r.Group(func(r chi.Router) {
 					r.Use(mJwt.VerifyUserTokenCredential)
 					r.Get("/", userCartHandler.GetAllHandler)
+					r.Post("/", userCartHandler.CheckoutHandler)
+					r.Put("/id/{id}", userCartHandler.UpdateHandler)
+					r.Delete("/id/{id}", userCartHandler.DeleteHandler)
 				})
 			})
 		})

@@ -1,11 +1,16 @@
 package usecase
 
 import (
+	"errors"
 	"retel-backend/model"
 	"retel-backend/pkg/logruslogger"
 	"retel-backend/pkg/str"
+	"retel-backend/server/request"
 	"retel-backend/usecase/viewmodel"
 	"strings"
+	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 // UserCartUC ...
@@ -54,4 +59,95 @@ func (uc UserCartUC) FindAll(userID string, page, limit int, by, sort string) (r
 	}
 
 	return res, pagination, err
+}
+
+// CheckDetails ...
+func (uc UserCartUC) CheckDetails(data *request.UserCartRequest, product *viewmodel.ProductVM) (err error) {
+	ctx := "UserCartUC.CheckDetails"
+
+	productUC := ProductUC{ContractUC: uc.ContractUC}
+	p, err := productUC.FindByID(data.ProductID)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "FindByID", uc.ReqID)
+		return err
+	}
+
+	if p.ID == "" {
+		logruslogger.Log(logruslogger.WarnLevel, "", ctx, "check_product", uc.ReqID)
+		return errors.New("invalid_product")
+	}
+
+	if data.Qty > int64(p.Qty) {
+		logruslogger.Log(logruslogger.WarnLevel, "", ctx, "check_qty", uc.ReqID)
+		return errors.New("invalid_qty")
+	}
+
+	product.Price = p.Price
+
+	return err
+}
+
+// ToCart ...
+func (uc UserCartUC) ToCart(userID string, data *request.UserCartRequest) (res viewmodel.UserCartVM, err error) {
+	ctx := "UserCartUC.ToCart"
+	var product viewmodel.ProductVM
+
+	err = uc.CheckDetails(data, &product)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "check_details", uc.ReqID)
+		return res, err
+	}
+
+	now := time.Now().UTC()
+	res = viewmodel.UserCartVM{
+		ID:        uuid.NewV4().String(),
+		ProductID: data.ProductID,
+		UserID:    userID,
+		Qty:       data.Qty,
+		Price:     product.Price,
+		CreatedAt: now.Format(time.RFC3339),
+		UpdatedAt: now.Format(time.RFC3339),
+	}
+	m := model.NewUserCartModel(uc.DB)
+	err = m.Store(res.ID, res, now)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "query", uc.ReqID)
+		return res, err
+	}
+
+	return res, err
+}
+
+// Update ...
+func (uc UserCartUC) Update(id string, data *request.UserCartUpdateRequest) (res viewmodel.UserCartVM, err error) {
+	ctx := "UserCartUC.Update"
+	now := time.Now().UTC()
+	res = viewmodel.UserCartVM{
+		ID:        id,
+		Qty:       data.Qty,
+		UpdatedAt: now.Format(time.RFC3339),
+	}
+	m := model.NewUserCartModel(uc.DB)
+	err = m.Update(id, res, now)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "query", uc.ReqID)
+		return res, err
+	}
+
+	return res, err
+}
+
+// Delete ...
+func (uc UserCartUC) Delete(id string) (err error) {
+	ctx := "UserCartUC.Delete"
+
+	now := time.Now().UTC()
+	m := model.NewUserCartModel(uc.DB)
+	err = m.Destroy(id, now)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "query", uc.ReqID)
+		return err
+	}
+
+	return err
 }
