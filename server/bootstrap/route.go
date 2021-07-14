@@ -86,6 +86,16 @@ func (boot *Bootup) RegisterRoutes() {
 					r.Delete("/id/{id}", userCartHandler.DeleteHandler)
 				})
 			})
+
+			transactionHandler := api.TransactionHandler{Handler: handlerType}
+			r.Route("/transaction", func(r chi.Router) {
+				r.Group(func(r chi.Router) {
+					r.Use(mJwt.VerifyUserTokenCredential)
+					r.Get("/", transactionHandler.GetAllByTokenHandler)
+					r.Get("/id/{id}", transactionHandler.GetByIDHandler)
+				})
+			})
+
 		})
 	})
 }
