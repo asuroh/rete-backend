@@ -2,10 +2,12 @@ package handler
 
 import (
 	"net/http"
+	"retel-backend/server/request"
 	"retel-backend/usecase"
 	"strconv"
 
 	"github.com/go-chi/chi"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 // TransactionHandler ...
@@ -52,6 +54,51 @@ func (h *TransactionHandler) GetByIDHandler(w http.ResponseWriter, r *http.Reque
 
 	transactionUC := usecase.TransactionUC{ContractUC: h.ContractUC}
 	res, err := transactionUC.FindByID(id)
+	if err != nil {
+		SendBadRequest(w, err.Error())
+		return
+	}
+
+	SendSuccess(w, res, nil)
+	return
+}
+
+// CheckoutHandler ...
+func (h *TransactionHandler) CheckoutHandler(w http.ResponseWriter, r *http.Request) {
+	user := requestIDFromContextInterfaceWithNil(r.Context(), "user")
+	userID := user["id"].(string)
+
+	req := request.TransactionRequest{}
+	if err := h.Handler.Bind(r, &req); err != nil {
+		SendBadRequest(w, err.Error())
+		return
+	}
+	if err := h.Handler.Validate.Struct(req); err != nil {
+		h.SendRequestValidationError(w, err.(validator.ValidationErrors))
+		return
+	}
+	req.UserID = userID
+	transactionUC := usecase.TransactionUC{ContractUC: h.ContractUC}
+	res, err := transactionUC.Create(&req)
+	if err != nil {
+		SendBadRequest(w, err.Error())
+		return
+	}
+
+	SendSuccess(w, res, nil)
+	return
+}
+
+//XenditInvoiceCallbackHandler ...
+func (h *TransactionHandler) XenditInvoiceCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	req := request.XenditInvoiceCallbackRequest{}
+	if err := h.Handler.Bind(r, &req); err != nil {
+		SendBadRequest(w, err.Error())
+		return
+	}
+
+	xenditUc := usecase.XenditUC{ContractUC: h.ContractUC}
+	res, err := xenditUc.XenditInvoiceCallback(req)
 	if err != nil {
 		SendBadRequest(w, err.Error())
 		return

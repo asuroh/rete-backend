@@ -6,6 +6,7 @@ import (
 	"retel-backend/pkg/jwe"
 	"retel-backend/pkg/jwt"
 	"retel-backend/pkg/logruslogger"
+	"retel-backend/pkg/xendit"
 	"time"
 
 	"database/sql"
@@ -43,6 +44,7 @@ type ContractUC struct {
 	Tx          *sql.Tx
 	AmqpConn    *amqp.Connection
 	AmqpChannel *amqp.Channel
+	Xendit      xendit.Credential
 	Redis       *redis.Client
 	Jwt         jwt.Credential
 	Jwe         jwe.Credential

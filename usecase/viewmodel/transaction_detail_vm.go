@@ -8,6 +8,7 @@ type TransactionDetailVM struct {
 	ProductID     string  `json:"product_id"`
 	Price         float64 `json:"price"`
 	Qty           int64   `json:"qty"`
+	Total         float64 `json:"total"`
 	CheckIn       string  `json:"check_in"`
 	CheckOut      string  `json:"check_out"`
 	CreatedAt     string  `json:"created_at"`

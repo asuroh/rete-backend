@@ -7,6 +7,15 @@ import (
 )
 
 var (
+	// TransactionWaitingPayment ...
+	TransactionWaitingPayment = "Waiting Payment"
+	// TransactionPaid ...
+	TransactionPaid = "Paid"
+	// TransactionRefunded ...
+	TransactionRefunded = "Refunded"
+	// TransactionCanceled ...
+	TransactionCanceled = "Canceled"
+
 	// DefaultTransactionBy ...
 	DefaultTransactionBy = "def.updated_at"
 	// TransactionBy ...
@@ -42,7 +51,11 @@ type transactionModel struct {
 type Itransaction interface {
 	FindAll(userID string, offset, limit int, by, sort string) ([]TransactionEntity, int, error)
 	FindByID(id string) (TransactionEntity, error)
+	FindByInvoiceID(invoiceID string) (TransactionEntity, error)
 	Store(id string, body viewmodel.TransactionVM, changedAt time.Time) error
+	CountNumberInvoice() (int, error)
+	UpdateXendit(id string, body viewmodel.TransactionXenditVM, changedAt time.Time) error
+	UpdateStatus(id, status string, changedAt time.Time) error
 }
 
 // TransactionEntity ....
@@ -108,11 +121,40 @@ func (model transactionModel) FindByID(id string) (res TransactionEntity, err er
 	return res, err
 }
 
+// FindByInvoiceID ...
+func (model transactionModel) FindByInvoiceID(invoiceID string) (res TransactionEntity, err error) {
+	query := transactionSelectString + ` WHERE def.deleted_at IS NULL AND def.invoice_id = ?
+		ORDER BY def.created_at DESC LIMIT 1`
+	row := model.DB.QueryRow(query, invoiceID)
+	res, err = model.scanRow(row)
+
+	return res, err
+}
+
 // Store ...
 func (model transactionModel) Store(id string, body viewmodel.TransactionVM, changedAt time.Time) (err error) {
-	sql := `INSERT INTO transaction (id, user_id, url_payment, invoce_id, note, status, created_at, updated_at
-		) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`
-	_, err = model.DB.Exec(sql, id, body.UserID, body.UrlPayment, body.InvoceID, body.Note, body.Status, changedAt, changedAt)
+	sql := `INSERT INTO transaction (id, user_id, note, status, code, created_at, updated_at
+		) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	_, err = model.DB.Exec(sql, id, body.UserID, body.Note, body.Status, body.Code, changedAt, changedAt)
 
+	return err
+}
+
+func (model transactionModel) CountNumberInvoice() (count int, err error) {
+	sql := `SELECT COUNT(code) as count FROM transaction WHERE DATE_FORMAT(created_at, '%m-%d-%Y') = DATE_FORMAT(NOW(), '%m-%d-%Y')`
+	err = model.DB.QueryRow(sql).Scan(&count)
+
+	return count, err
+}
+
+func (model transactionModel) UpdateXendit(id string, body viewmodel.TransactionXenditVM, changedAt time.Time) (err error) {
+	sql := `UPDATE transaction SET total = ?, url_payment = ?, invoice_id = ?,  updated_at = ? WHERE deleted_at IS NULL AND id = ?`
+	_, err = model.DB.Exec(sql, body.Total, body.UrlPayment, body.InvoceID, changedAt, id)
+	return err
+}
+
+func (model transactionModel) UpdateStatus(id, status string, changedAt time.Time) (err error) {
+	sql := `UPDATE transaction SET status = ?, updated_at = ? WHERE deleted_at IS NULL AND id = ?`
+	_, err = model.DB.Exec(sql, status, changedAt, id)
 	return err
 }

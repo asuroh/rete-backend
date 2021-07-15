@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"strings"
+
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -32,4 +34,14 @@ func (id UUID) String() string {
 	}
 
 	return uid.String()
+}
+
+// SplitDate ...
+func SplitDate(data string) string {
+	dataArr := strings.Split(data, "-")
+	if len(dataArr) != 3 {
+		return ""
+	}
+
+	return dataArr[0] + dataArr[1] + dataArr[2]
 }

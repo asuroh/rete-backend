@@ -10,6 +10,7 @@ import (
 	"retel-backend/pkg/jwt"
 	"retel-backend/pkg/logruslogger"
 	"retel-backend/pkg/str"
+	"retel-backend/pkg/xendit"
 	boot "retel-backend/server/bootstrap"
 	"retel-backend/usecase"
 	"strings"
@@ -95,6 +96,11 @@ func main() {
 		Passphrase:  envConfig["APP_PRIVATE_KEY_PASSPHRASE"],
 	}
 
+	// Xendit
+	xenditCredential := xendit.Credential{
+		Key: envConfig["XENDIT_KEY"],
+	}
+
 	// Validator initialize
 	validatorInit()
 
@@ -106,6 +112,7 @@ func main() {
 		EnvConfig: envConfig,
 		Jwt:       jwtCredential,
 		Jwe:       jweCredential,
+		Xendit:    xenditCredential,
 	}
 
 	r := chi.NewRouter()

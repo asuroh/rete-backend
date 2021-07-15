@@ -76,23 +76,27 @@ func (boot *Bootup) RegisterRoutes() {
 				})
 			})
 
-			userCartHandler := api.UserCartHandler{Handler: handlerType}
-			r.Route("/cart", func(r chi.Router) {
-				r.Group(func(r chi.Router) {
-					r.Use(mJwt.VerifyUserTokenCredential)
-					r.Get("/", userCartHandler.GetAllHandler)
-					r.Post("/", userCartHandler.CheckoutHandler)
-					r.Put("/id/{id}", userCartHandler.UpdateHandler)
-					r.Delete("/id/{id}", userCartHandler.DeleteHandler)
-				})
-			})
+			// userCartHandler := api.UserCartHandler{Handler: handlerType}
+			// r.Route("/cart", func(r chi.Router) {
+			// 	r.Group(func(r chi.Router) {
+			// 		r.Use(mJwt.VerifyUserTokenCredential)
+			// 		r.Get("/", userCartHandler.GetAllHandler)
+			// 		r.Post("/", userCartHandler.CheckoutHandler)
+			// 		r.Put("/id/{id}", userCartHandler.UpdateHandler)
+			// 		r.Delete("/id/{id}", userCartHandler.DeleteHandler)
+			// 	})
+			// })
 
 			transactionHandler := api.TransactionHandler{Handler: handlerType}
 			r.Route("/transaction", func(r chi.Router) {
 				r.Group(func(r chi.Router) {
+					r.Post("/callback", transactionHandler.XenditInvoiceCallbackHandler)
+				})
+				r.Group(func(r chi.Router) {
 					r.Use(mJwt.VerifyUserTokenCredential)
 					r.Get("/", transactionHandler.GetAllByTokenHandler)
 					r.Get("/id/{id}", transactionHandler.GetByIDHandler)
+					r.Post("/", transactionHandler.CheckoutHandler)
 				})
 			})
 

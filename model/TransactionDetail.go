@@ -2,6 +2,8 @@ package model
 
 import (
 	"database/sql"
+	"retel-backend/usecase/viewmodel"
+	"time"
 )
 
 var (
@@ -38,6 +40,7 @@ type transactionDetailModel struct {
 
 // ItransactionDetail ...
 type ItransactionDetail interface {
+	Store(id string, body viewmodel.TransactionDetailVM, changedAt time.Time) error
 }
 
 // TransactionDetailEntity ....
@@ -58,4 +61,13 @@ type TransactionDetailEntity struct {
 // NewTransactionDetailModel ...
 func NewTransactionDetailModel(db *sql.DB) ItransactionDetail {
 	return &transactionDetailModel{DB: db}
+}
+
+// Store ...
+func (model transactionDetailModel) Store(id string, body viewmodel.TransactionDetailVM, changedAt time.Time) (err error) {
+	sql := `INSERT INTO transaction_details (id, transaction_id, product_name, product_id, price, qty, check_in, check_out, created_at, updated_at
+		) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	_, err = model.DB.Exec(sql, id, body.TransactionID, body.ProductName, body.ProductID, body.Price, body.Qty, body.CheckIn, body.CheckOut, changedAt, changedAt)
+
+	return err
 }
