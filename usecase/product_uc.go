@@ -1,11 +1,13 @@
 package usecase
 
 import (
+	"errors"
 	"retel-backend/model"
 	"retel-backend/pkg/logruslogger"
 	"retel-backend/pkg/str"
 	"retel-backend/usecase/viewmodel"
 	"strings"
+	"time"
 )
 
 // ProductUC ...
@@ -75,4 +77,61 @@ func (uc ProductUC) FindByID(id string) (res viewmodel.ProductVM, err error) {
 	uc.BuildBody(&data, &res)
 
 	return res, err
+}
+
+// CheckDetails ...
+func (uc ProductUC) CheckDetails(oldData *viewmodel.ProductVM, product *viewmodel.ProductVM) (err error) {
+	ctx := "ProductUC.CheckDetails"
+
+	p, err := uc.FindByID(oldData.ID)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "FindByID", uc.ReqID)
+		return err
+	}
+
+	if p.ID == "" {
+		logruslogger.Log(logruslogger.WarnLevel, "", ctx, "check_product", uc.ReqID)
+		return errors.New("invalid_product")
+	}
+
+	if int64(oldData.Qty) > int64(p.Qty) || p.Qty == 0 {
+		logruslogger.Log(logruslogger.WarnLevel, "", ctx, "check_qty", uc.ReqID)
+		return errors.New("invalid_qty")
+	}
+	product.Qty = p.Qty
+	return err
+}
+
+// UpdateStock ...
+func (uc ProductUC) UpdateStock(id string, typeData string, qty int64) (err error) {
+	ctx := "ProductUC.UpdateStock"
+	var product viewmodel.ProductVM
+	var qtyReal int64
+
+	err = uc.CheckDetails(&viewmodel.ProductVM{
+		ID:  id,
+		Qty: int(qty),
+	}, &product)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "check_details", uc.ReqID)
+		return err
+	}
+
+	if typeData == model.TypeDataMinus {
+		qtyReal = int64(product.Qty) - qty
+	} else if typeData == model.TypeDataPlus {
+		qtyReal = int64(product.Qty) + qty
+	} else {
+		logruslogger.Log(logruslogger.WarnLevel, "", ctx, "type_data", uc.ReqID)
+		return errors.New("invalid_type")
+	}
+
+	now := time.Now().UTC()
+	m := model.NewProductModel(uc.DB)
+	err = m.UpdateStock(id, qtyReal, now)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "query", uc.ReqID)
+		return err
+	}
+	return err
 }

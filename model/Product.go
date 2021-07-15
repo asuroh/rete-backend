@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"strings"
+	"time"
 )
 
 var (
@@ -12,6 +13,11 @@ var (
 	ProductrBy = []string{
 		"def.created_at", "def.updated_at",
 	}
+
+	// TypeDataMinus ...
+	TypeDataMinus = "minus"
+	// TypeDataPlus ...
+	TypeDataPlus = "plus"
 
 	productSelectString = `SELECT def.id, def.category_id, c.name, def.name, def.description, def.image_path, def.price, def.qty, def.created_at, def.updated_at, def.deleted_at FROM products def left join categories c on c.id = def.category_id `
 )
@@ -43,6 +49,7 @@ type productModel struct {
 type IProduct interface {
 	FindAll(search, categoryID string, offset, limit int, by, sort string) ([]ProductEntity, int, error)
 	FindByID(id string) (ProductEntity, error)
+	UpdateStock(id string, qty int64, changedAt time.Time) error
 }
 
 // ProductEntity ....
@@ -106,4 +113,12 @@ func (model productModel) FindByID(id string) (res ProductEntity, err error) {
 	res, err = model.scanRow(row)
 
 	return res, err
+}
+
+func (model productModel) UpdateStock(id string, qty int64, changedAt time.Time) (err error) {
+	sql := `UPDATE products SET qty = ?, updated_at = ? WHERE deleted_at IS NULL
+		AND id = ?`
+	_, err = model.DB.Exec(sql, qty, changedAt, id)
+
+	return err
 }

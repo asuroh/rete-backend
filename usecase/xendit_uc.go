@@ -73,5 +73,16 @@ func (uc XenditUC) XenditInvoiceCallback(data request.XenditInvoiceCallbackReque
 		return res, err
 	}
 
+	// todo ...
+	// if Status == model.TransactionCanceled {
+	// todo
+	// productUC := ProductUC{ContractUC: uc.ContractUC}
+	// err = productUC.UpdateStock(transactionData.ID, model.TypeDataPlus, 0)
+	// if err != nil {
+	// 	logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "update_stock", uc.ReqID)
+	// 	return res, err
+	// }
+	// }
+
 	return res, err
 }

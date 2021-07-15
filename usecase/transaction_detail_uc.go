@@ -74,5 +74,12 @@ func (uc TransactionDetailUC) Create(data *request.TransactionDetailRequest) (re
 		return res, err
 	}
 
+	productUC := ProductUC{ContractUC: uc.ContractUC}
+	err = productUC.UpdateStock(res.ID, model.TypeDataMinus, data.Qty)
+	if err != nil {
+		logruslogger.Log(logruslogger.WarnLevel, err.Error(), ctx, "update_stock", uc.ReqID)
+		return res, err
+	}
+
 	return res, err
 }
